@@ -2,13 +2,13 @@ package MichaelMatrixMath;
 
 //polynomial in vector form
 public class Polynomial{
-    public int[] coefficients;
-    public Polynomial(int[] arr){
+    public double[] coefficients;
+    public Polynomial(double[] arr){
         coefficients = arr;
     }
     //Multiply two polynomials
     public Polynomial multiply(Polynomial other){
-        Polynomial result = new Polynomial(new int[this.coefficients.length + other.coefficients.length-1]);
+        Polynomial result = new Polynomial(new double[this.coefficients.length + other.coefficients.length-1]);
         for(int i=0;i<this.coefficients.length;i++){
             for(int j=0;j<other.coefficients.length;j++){
                 result.coefficients[i+j]+=this.coefficients[i]*other.coefficients[j];
@@ -17,8 +17,8 @@ public class Polynomial{
         return result;
     }
 
-    public Polynomial multiply(int scalar){
-        Polynomial result = new Polynomial(new int[this.coefficients.length]);
+    public Polynomial multiply(double scalar){
+        Polynomial result = new Polynomial(new double[this.coefficients.length]);
         for(int i = 0; i<this.coefficients.length;i++){
             result.coefficients[i]=scalar*this.coefficients[i];
         }
@@ -27,7 +27,7 @@ public class Polynomial{
 
     //add two polynomials
     public Polynomial add(Polynomial other){
-        Polynomial result = new Polynomial(new int[Math.max(this.coefficients.length,other.coefficients.length)]);
+        Polynomial result = new Polynomial(new double[Math.max(this.coefficients.length,other.coefficients.length)]);
         for(int i=0;i<this.coefficients.length;i++){
             result.coefficients[i]+=this.coefficients[i];
         }
@@ -41,15 +41,6 @@ public class Polynomial{
         double total = 0;
         for(int i = 0; i<this.coefficients.length; i++){
             total+=this.coefficients[i]*Math.pow(input,i);
-        }
-        return total;
-    }
-
-    //evaluate polynomial at input
-    public ComplexSolution evaluate(ComplexSolution input){
-        ComplexSolution total = new ComplexSolution(0,0);
-        for(int i = 0; i<this.coefficients.length; i++){
-            total=total.add(input.exp(i).multiply(this.coefficients[i]));
         }
         return total;
     }
