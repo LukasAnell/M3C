@@ -62,6 +62,8 @@ public class Main {
         yAxis.setTickUnit(new NumberTickUnit(10000));
         yAxis.setRange(531403, 600000);
         XYPlot plot = (XYPlot) lineChart.getPlot();
+        plot.setDomainGridlinesVisible(false);
+        plot.setRangeGridlinesVisible(false);
         plot.setRangeAxis(yAxis);
         File f = new File("src/main/Images/population.png");
         ChartUtils.saveChartAsPNG(f, lineChart, 1024, 1024);
