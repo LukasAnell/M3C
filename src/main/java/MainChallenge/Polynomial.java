@@ -1,4 +1,4 @@
-package MichaelMatrixMath;
+package MainChallenge;
 
 //polynomial in vector form
 public class Polynomial{

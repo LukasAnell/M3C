@@ -2,9 +2,6 @@ package MainChallenge;
 
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
-import MichaelMatrixMath.Polynomial;
-import XMLHandling.SAXHandler;
-import XMLHandling.XmlReader;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
