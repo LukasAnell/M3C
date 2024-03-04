@@ -112,44 +112,6 @@ public class Main {
                 timeZero
         };
 
-        // convert matrix containing time vectors to a Matrix object
-        // and initialize transposedTimeMatrix to its transpose
-        /*
-        * The lines are reversed due to the nature of initializing 2D Arrays,
-        * which would represent the vector as its transpose by default,
-        * rather than the intended matrix
-        */
-        Matrix transposedIndependentsMatrix = new Matrix(independents);
-        Matrix independentsMatrix = transposedIndependentsMatrix.transpose();
-
-        // multiplies the two previous matrices, will be used in SVD
-        Matrix multMatrix = transposedIndependentsMatrix.times(independentsMatrix);
-
-
-        // SVD is performed on the transposedTimeXTime
-        SingularValueDecomposition svd = new SingularValueDecomposition(multMatrix);
-
-        // get U and V matrices
-        // and their transposed counterparts
-        Matrix UMatrix = svd.getU();
-
-        //U is orthogonal, so its inverse is its transpose
-        Matrix transposedUMatrix = UMatrix.transpose();
-        Matrix VMatrix = svd.getV();
-
-        //this is also the case with V
-        Matrix transposedVMatrix = VMatrix.transpose();
-
-        // get vector containing singular values of multMatrix and find the recipricoals for each
-        // and create Matrix object for it
-        //In total, it is (A^T * A)^-1 * A^T
-        //(A^T * A)^-1 = V * S^-1 U^T
-        double[] svds = svd.getSingularValues();
-        Matrix svdMatrix = createSVDArray(svds, transposedVMatrix.getColumnDimension(), transposedUMatrix.getRowDimension());
-
-        // create PseudoInverse by multiplying the parts together
-        Matrix pseudoInverse = VMatrix.times(svdMatrix).times(transposedUMatrix);
-
         // vector that stores the dependent values
         double[] dependent = new double[] {
                 9022,
@@ -167,6 +129,16 @@ public class Main {
                 13368
         };
 
+        // convert matrix containing time vectors to a Matrix object
+        // and initialize transposedTimeMatrix to its transpose
+        /*
+        * The lines are reversed due to the nature of initializing 2D Arrays,
+        * which would represent the vector as its transpose by default,
+        * rather than the intended matrix
+        */
+        Matrix transposedIndependentsMatrix = new Matrix(independents);
+        Matrix independentsMatrix = transposedIndependentsMatrix.transpose();
+
         // constructs a Matrix of the dependent values and takes the transpose
         Matrix dependentMatrix = new Matrix(new double[][] {
                 dependent
@@ -176,7 +148,7 @@ public class Main {
         // the pseudoInverse by the transposedIndependentsMatrix
         // then by the dependentMatrix, and then taking the transpose
         // weights = Independents^-1 * Dependents
-        Matrix weights = pseudoInverse.times(transposedIndependentsMatrix).times(dependentMatrix).transpose();
+        Matrix weights = computeWeights(dependentMatrix, independentsMatrix);
 
         // convert weights Matrix to a vector and print them out
         double[] weightArray = weights.getColumnPackedCopy();
@@ -205,7 +177,7 @@ public class Main {
             x++;
         }
 
-       // plots given data points as a scatterplot on the same graph as the line
+        // plots given data points as a scatterplot on the same graph as the line
         XYSeries givenDataPoints = new XYSeries("Given Points");
         for(int i = 0; i < dependent.length; i++) {
             givenDataPoints.add(i, dependent[i]);
@@ -236,6 +208,7 @@ public class Main {
         plot.setDomainGridlinesVisible(false);
         plot.setRangeGridlinesVisible(false);
         plot.setRangeAxis(yAxis);
+
         // initializes renderer and makes it so:
         // line graph lines are visible but data points are hidden
         // and
@@ -249,6 +222,50 @@ public class Main {
         // saves chart as an image
         File f = new File("src/main/Images/housingSupplyVsTime.png");
         ChartUtils.saveChartAsPNG(f, lineChart, 1024, 1024);
+    }
+
+    public static Matrix computeWeights(Matrix dependentVals, Matrix independentVals) {
+        // Initialize unTransposedIndependentsMatrix to the transpose of independentVals
+        /*
+        * The lines are reversed due to the nature of initializing 2D Arrays,
+        * which would represent the vector as its transpose by default,
+        * rather than the intended matrix
+        */
+        Matrix unTransposedIndependentsMatrix = independentVals.transpose();
+
+        // multiplies the two previous matrices, will be used in SVD
+        Matrix multMatrix = independentVals.times(unTransposedIndependentsMatrix);
+
+
+        // SVD is performed on the multMatrix
+        SingularValueDecomposition svd = new SingularValueDecomposition(multMatrix);
+
+        // get U and V matrices
+        // and their transposed counterparts
+        Matrix UMatrix = svd.getU();
+
+        //U is orthogonal, so its inverse is its transpose
+        Matrix transposedUMatrix = UMatrix.transpose();
+        Matrix VMatrix = svd.getV();
+
+        //this is also the case with V
+        Matrix transposedVMatrix = VMatrix.transpose();
+
+        // get vector containing singular values of multMatrix and find the reciprocals for each
+        // and create Matrix object for it
+        //In total, it is (A^T * A)^-1 * A^T
+        //(A^T * A)^-1 = V * S^-1 U^T
+        double[] svds = svd.getSingularValues();
+        Matrix svdMatrix = createSVDArray(svds, transposedVMatrix.getColumnDimension(), transposedUMatrix.getRowDimension());
+
+        // create PseudoInverse by multiplying the parts together
+        Matrix pseudoInverse = VMatrix.times(svdMatrix).times(transposedUMatrix);
+
+        // computes the weights Matrix by multiplying
+        // the pseudoInverse by the independentVals Matrix
+        // then by the dependentVals Matrix, and then taking the transpose
+        // weights = Independents^-1 * Dependents
+        return pseudoInverse.times(independentVals).times(dependentVals).transpose();
     }
 
     public static double multiplyByWeights(double x, Matrix weights) {

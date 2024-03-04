@@ -1,21 +1,12 @@
 package Testing;
 
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.function.LineFunction2D;
-
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
-import javax.imageio.ImageIO;
 
 
 public class Main {
@@ -24,8 +15,8 @@ public class Main {
 
         // y = ln(x)
         double x = -10;
-        while(x <= 1000) {
-            double y = Math.log(x);
+        while(x <= 10) {
+            double y = Math.pow(Math.E, x);
             dataset.addValue(y, "", "" + x);
 
             x += 0.1;
