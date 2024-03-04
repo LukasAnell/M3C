@@ -12,14 +12,10 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.chart.util.ShapeUtils;
-import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -27,10 +23,61 @@ public class Main {
     public static void main(String[] args) throws IOException {
         // graphPopulationGrowth();
         matrixFuckery();
+
+//        Guess guess = new Guess(new double[] {1, 1, 1, 1});
+//        System.out.println(guess);
+//        for(int i = 0; i < 2; i++) {
+//            gaussNewton(time, vacantHousing, guess);
+//        }
+//        System.out.println(guess);
+    }
+
+    public static void gaussNewton(double[] independent, double[] dependent, Guess guess) {
+        double[][] jacobianMatrix = new double[independent.length][4];
+
+
+        for(int c = 0; c < jacobianMatrix[0].length; c++) {
+            for(int r = 0; r < jacobianMatrix.length; r++) {
+                switch(c) {
+                    case 0:
+                        jacobianMatrix[r][c] = guess.evaluateDerivativeOne(independent[r]);
+                        break;
+                    case 1:
+                        jacobianMatrix[r][c] = guess.evaluateDerivativeTwo(independent[r]);
+                        break;
+                    case 2:
+                        jacobianMatrix[r][c] = guess.evaluateDerivativeThree(independent[r]);
+                        break;
+                    case 3:
+                        jacobianMatrix[r][c] = guess.evaluateDerivativeFour(independent[r]);
+                        break;
+                }
+            }
+        }
+
+        double[] residualArray = new double[dependent.length];
+        for(int i = 0; i < residualArray.length; i++) {
+            residualArray[i] = dependent[i] - guess.evaluateActual(independent[i]);
+        }
+        Matrix residualMatrix = new Matrix(new double[][] {residualArray});
+        residualMatrix = residualMatrix.transpose();
+        Matrix result = getPseudoInverse(jacobianMatrix);
+        System.out.println("result " + result.getRowDimension() + " " + result.getRowDimension());
+
+
+        Matrix parameterMatrix = new Matrix(new double[][] {guess.parameters});
+        parameterMatrix = parameterMatrix.transpose();
+        System.out.println("result: " + result.getRowDimension() + " " + result.getColumnDimension());
+        System.out.println("residual: " + residualMatrix.getRowDimension() + " " + residualMatrix.getColumnDimension());
+        result = parameterMatrix.minus(result.times(residualMatrix));
+        guess.parameters = result.getColumnPackedCopy();
     }
 
     public static void matrixFuckery() throws IOException {
         double[] timeZero = new double[] {
+                1,
+                1,
+                1,
                 1,
                 1,
                 1,
@@ -59,52 +106,149 @@ public class Main {
                 9,
                 10,
                 11,
-                12
+                12,
+                13,
+                14,
+                15
+        };
+
+        double[] timeSquared = new double[] {
+                0,
+                1,
+                4,
+                9,
+                16,
+                25,
+                36,
+                49,
+                64,
+                81,
+                100,
+                121,
+                144,
+                169,
+                196,
+                225
+        };
+
+        double[] timeCubed = new double[] {
+                0,
+                1,
+                8,
+                27,
+                64,
+                125,
+                216,
+                343,
+                512,
+                729,
+                1000,
+                1331,
+                1728,
+                2197,
+                2744,
+                3375
+        };
+
+        double[] timeQuartic = new double[] {
+                0,
+                1,
+                16,
+                81,
+                256,
+                625,
+                1296,
+                2401,
+                4096,
+                6561,
+                10000,
+                14641,
+                20736,
+                28561,
+                38416,
+                50625
+        };
+
+        double[] timeQuintic = new double[] {
+                0,
+                1,
+                32,
+                243,
+                1024,
+                3125,
+                7776,
+                16807,
+                32768,
+                59049,
+                100000,
+                161051,
+                248832,
+                371293,
+                537824,
+                759375
+        };
+
+        double[] timeHexic = new double[] {
+                0,
+                1,
+                64,
+                729,
+                4096,
+                15625,
+                46656,
+                117649,
+                262144,
+                531441,
+                1000000,
+                1771561,
+                2985984,
+                4826809,
+                7529536,
+                11390625
         };
 
         double[][] timeLongs = new double[][] {
                 timeZero,
                 time,
+                timeSquared,
+                timeCubed,
+                timeQuartic,
+                timeQuintic,
+                timeHexic
         };
 
-        double[] totalHousingUnits = new double[] {
-                234891,
-                237735,
-                239718,
-                240277,
-                240961,
-                241326,
-                242070,
-                243402,
-                244382,
-                245476,
-                247926,
-                252924,
-                255178
-
-        };
-
-        double[] occupiedUnits = new double[] {
-                217256,
-                220060,
-                222584,
-                222491,
-                222868,
-                222098,
-                221320,
-                221119,
-                222748,
-                224166,
-                229701,
-                236191,
-                239800
-        };
-
-        double[] occupationPercentage = new double[totalHousingUnits.length];
-
-        for(int i = 0; i < totalHousingUnits.length; i++) {
-            occupationPercentage[i] = occupiedUnits[i] / totalHousingUnits[i];
-        }
+//        double[] totalHousingUnits = new double[] {
+//                302465,
+//                304164,
+//                306694,
+//                309205,
+//                311286,
+//                315950,
+//                322795,
+//                334739,
+//                344503,
+//                354475,
+//                367337,
+//                362809,
+//                372436
+//        };
+//
+//        double[] occupiedUnits = new double[] {
+//                280453,
+//                282480,
+//                285476,
+//                288439,
+//                290822,
+//                296633,
+//                304157,
+//                314850,
+//                323446,
+//                331836,
+//                344629,
+//                337361,
+//                345246
+//
+//        };
 
         Matrix transposedMatrix = new Matrix(timeLongs);
         Matrix UnTransposedMatrix = transposedMatrix.transpose();
@@ -122,34 +266,35 @@ public class Main {
         inverse = inverse.times(transposedUMatrix);
         Matrix transposeInverse = inverse.transpose();
 
-        double[] housingUnits = new double[] {
-                17635,
-                17675,
-                17134,
-                17786,
-                18093,
-                19228,
-                20750,
-                22283,
-                21634,
-                21310,
-                18225,
-                16733,
-                15378
+//        double[] occupationPercentage = new double[totalHousingUnits.length];
+//
+//        for(int i = 0; i < totalHousingUnits.length; i++) {
+//            occupationPercentage[i] = occupiedUnits[i] / totalHousingUnits[i];
+//        }
+        double[] vacantUnits = new double[] {
+                1276,
+                1276,
+                2002,
+                2002,
+                1639,
+                1431,
+                1171,
+                1254,
+                1287,
+                1222,
+                1318,
+                1340,
+                1524,
+                1586,
+                1567,
+                1277
         };
 
         Matrix housingMatrix = new Matrix(new double[][] {
-                housingUnits
+                vacantUnits
         }).transpose();
 
-
-
-        System.out.println("inverse " + inverse.getRowDimension() + " " + inverse.getColumnDimension());
-        System.out.println("time " + UnTransposedMatrix.getRowDimension() + " " + UnTransposedMatrix.getColumnDimension());
-        System.out.println("housing " + housingMatrix.getRowDimension() + " " + housingMatrix.getColumnDimension());
-
         Matrix weights = inverse.times(transposedMatrix).times(housingMatrix).transpose();
-        System.out.println("Weights " + weights.getRowDimension() + " " + weights.getColumnDimension());
 
         double[] weightArray = weights.getColumnPackedCopy();
         for(int i = 0; i < weightArray.length; i++) {
@@ -160,22 +305,26 @@ public class Main {
 
         XYSeries regressionEstimate = new XYSeries("Housing Supply vs. Time");
         double x = 0;
-        while(x <= 20) {
+        System.out.println();
+        while(x <= 50) {
             double y = multiplyByWeights(x, weights);
+            if(x == 10 || x == 20 || x == 50) {
+                System.out.println(y);
+            }
             regressionEstimate.add(x, y);
             x++;
         }
 
         XYSeries givenDataPoints = new XYSeries("Given Points");
-        for(int i = 0; i < housingUnits.length; i++) {
-            givenDataPoints.add(i, housingUnits[i]);
+        for(int i = 0; i < vacantUnits.length; i++) {
+            givenDataPoints.add(i, vacantUnits[i]);
         }
 
         data.addSeries(regressionEstimate);
-         data.addSeries(givenDataPoints);
+        data.addSeries(givenDataPoints);
 
         JFreeChart lineChart = ChartFactory.createXYLineChart(
-                "Vacant Housing vs. Time",
+                "Homelessness vs. Time",
                 "Time", "Vacant Units",
                 data,
                 PlotOrientation.VERTICAL,
@@ -183,8 +332,8 @@ public class Main {
         );
 
         NumberAxis yAxis = new NumberAxis();
-        yAxis.setTickUnit(new NumberTickUnit(1000));
-        yAxis.setRange(12000, 25000);
+        yAxis.setTickUnit(new NumberTickUnit(100));
+        yAxis.setRange(0, 3000);
 
         NumberAxis xAxis = new NumberAxis();
         xAxis.setTickUnit(new NumberTickUnit(1));
@@ -199,6 +348,29 @@ public class Main {
         renderer.setSeriesShapesVisible(1, true);
         File f = new File("src/main/Images/housingSupplyVsTime.png");
         ChartUtils.saveChartAsPNG(f, lineChart, 1024, 1024);
+    }
+
+
+    private static Matrix getPseudoInverse(double[][] jacobian) {
+        Matrix transposedMatrix = new Matrix(jacobian);
+        Matrix UnTransposedMatrix = transposedMatrix.transpose();
+
+        Matrix transposedTimesUnTransposed = transposedMatrix.times(UnTransposedMatrix);
+
+        SingularValueDecomposition svd = new SingularValueDecomposition(transposedTimesUnTransposed);
+        Matrix UMatrix = svd.getU();
+        Matrix transposedUMatrix = UMatrix.transpose();
+        Matrix VMatrix = svd.getV();
+        Matrix transposedVMatrix = VMatrix.transpose();
+        double[] svds = svd.getSingularValues();
+
+        Matrix svdMatrix = createSVDArray(svds, transposedVMatrix.getColumnDimension(), transposedUMatrix.getRowDimension());
+        Matrix inverse = VMatrix.times(svdMatrix);
+        inverse = inverse.times(transposedUMatrix);
+        System.out.println("inverse: " + inverse.getRowDimension() + " " + inverse.getColumnDimension());
+        inverse = inverse.times(transposedMatrix);
+        System.out.println("inverse: " + inverse.getRowDimension() + " " + inverse.getColumnDimension());
+        return inverse;
     }
 
     public static double multiplyByWeights(double x, Matrix weights) {
