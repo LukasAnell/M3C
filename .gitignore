@@ -6,6 +6,7 @@ target/
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml
+src/Spreadsheet/
 .idea/compiler.xml
 .idea/libraries/
 *.iws
@@ -39,3 +40,5 @@ build/
 .DS_Store
 /src/main/Spreadsheet/
 /src/main/Spreadsheet/kjndgbksnfdb-1.xml
+/src/main/Spreadsheet/kjndgbksnfdb-1.xml
+/src/main/Spreadsheet/

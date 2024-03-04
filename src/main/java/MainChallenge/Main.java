@@ -86,11 +86,27 @@ public class Main {
                 1728
 
         };
+        double[] timeQuarted = new double[] {
+                0,
+                1,
+                16,
+                81,
+                256,
+                625,
+                1296,
+                2401,
+                4096,
+                6561,
+                10000,
+                14641,
+                20736
+        };
         double[][] timeLongs = new double[][] {
                 timeZero,
-                time
-//                timeSquared,
-//                timeCubed
+                time,
+                timeSquared,
+                timeCubed,
+                timeQuarted
         };
         Matrix transposedMatrix = new Matrix(timeLongs);
         Matrix UnTransposedMatrix = transposedMatrix.transpose();
@@ -176,6 +192,11 @@ public class Main {
         double[] weightArray = weights.getColumnPackedCopy();
 
         Polynomial polynomial = new Polynomial(weightArray);
+        System.out.println();
+        for(int i = 0; i < weightArray.length; i++) {
+            System.out.println(weightArray[i]);
+        }
+        System.out.println();
         return polynomial.evaluate(x);
     }
 
