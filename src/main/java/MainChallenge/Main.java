@@ -12,8 +12,14 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.util.ShapeUtils;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -39,6 +45,7 @@ public class Main {
                 1,
                 1
         };
+
         double[] time = new double[] {
                 0,
                 1,
@@ -54,86 +61,13 @@ public class Main {
                 11,
                 12
         };
-        double[] timeSquared = new double[] {
-                0,
-                1,
-                4,
-                9,
-                16,
-                25,
-                36,
-                49,
-                64,
-                81,
-                100,
-                121,
-                144
 
-        };
-        double[] timeCubed = new double[] {
-                0,
-                1,
-                8,
-                27,
-                64,
-                125,
-                216,
-                343,
-                512,
-                729,
-                1000,
-                1331,
-                1728
-
-        };
-        double[] timeQuarted = new double[] {
-                0,
-                1,
-                16,
-                81,
-                256,
-                625,
-                1296,
-                2401,
-                4096,
-                6561,
-                10000,
-                14641,
-                20736
-        };
         double[][] timeLongs = new double[][] {
                 timeZero,
                 time,
-                timeSquared,
-                timeCubed,
-                timeQuarted
         };
-        Matrix transposedMatrix = new Matrix(timeLongs);
-        Matrix UnTransposedMatrix = transposedMatrix.transpose();
 
-        Matrix e = transposedMatrix.times(UnTransposedMatrix);
-
-        SingularValueDecomposition svd = new SingularValueDecomposition(e);
-        Matrix UMatrix = svd.getU();
-        Matrix transposedUMatrix = UMatrix.transpose();
-        Matrix VMatrix = svd.getV();
-        Matrix transposedVMatrix = VMatrix.transpose();
-        double[] svds = svd.getSingularValues();
-        Matrix svdMatrix = createSVDArray(svds, transposedVMatrix.getColumnDimension(), transposedUMatrix.getRowDimension());
-        Matrix inverse = VMatrix.times(svdMatrix);
-        inverse = inverse.times(transposedUMatrix);
-        Matrix transposeInverse = inverse.transpose();
-
-        double[][] a = inverse.times(transposedMatrix).times(UnTransposedMatrix).getArray();
-
-        for(int r = 0; r < a.length; r++) {
-            for(int c = 0; c < a[0].length; c++) {
-                System.out.print(a[r][c] + " ");
-            }
-            System.out.println();
-        }
-
-        double[] housingUnits = new double[] {
+        double[] totalHousingUnits = new double[] {
                 234891,
                 237735,
                 239718,
@@ -147,56 +81,130 @@ public class Main {
                 247926,
                 252924,
                 255178
+
+        };
+
+        double[] occupiedUnits = new double[] {
+                217256,
+                220060,
+                222584,
+                222491,
+                222868,
+                222098,
+                221320,
+                221119,
+                222748,
+                224166,
+                229701,
+                236191,
+                239800
+        };
+
+        double[] occupationPercentage = new double[totalHousingUnits.length];
+
+        for(int i = 0; i < totalHousingUnits.length; i++) {
+            occupationPercentage[i] = occupiedUnits[i] / totalHousingUnits[i];
+        }
+
+        Matrix transposedMatrix = new Matrix(timeLongs);
+        Matrix UnTransposedMatrix = transposedMatrix.transpose();
+
+        Matrix transposedTimesUnTransposed = transposedMatrix.times(UnTransposedMatrix);
+
+        SingularValueDecomposition svd = new SingularValueDecomposition(transposedTimesUnTransposed);
+        Matrix UMatrix = svd.getU();
+        Matrix transposedUMatrix = UMatrix.transpose();
+        Matrix VMatrix = svd.getV();
+        Matrix transposedVMatrix = VMatrix.transpose();
+        double[] svds = svd.getSingularValues();
+        Matrix svdMatrix = createSVDArray(svds, transposedVMatrix.getColumnDimension(), transposedUMatrix.getRowDimension());
+        Matrix inverse = VMatrix.times(svdMatrix);
+        inverse = inverse.times(transposedUMatrix);
+        Matrix transposeInverse = inverse.transpose();
+
+        double[] housingUnits = new double[] {
+                17635,
+                17675,
+                17134,
+                17786,
+                18093,
+                19228,
+                20750,
+                22283,
+                21634,
+                21310,
+                18225,
+                16733,
+                15378
         };
 
         Matrix housingMatrix = new Matrix(new double[][] {
                 housingUnits
         }).transpose();
 
-        System.out.println("inveres " + inverse.getRowDimension() + " " + inverse.getColumnDimension());
+
+
+        System.out.println("inverse " + inverse.getRowDimension() + " " + inverse.getColumnDimension());
         System.out.println("time " + UnTransposedMatrix.getRowDimension() + " " + UnTransposedMatrix.getColumnDimension());
         System.out.println("housing " + housingMatrix.getRowDimension() + " " + housingMatrix.getColumnDimension());
 
         Matrix weights = inverse.times(transposedMatrix).times(housingMatrix).transpose();
         System.out.println("Weights " + weights.getRowDimension() + " " + weights.getColumnDimension());
 
-        XYSeries series = new XYSeries("Housing Supply vs. Time");
+        double[] weightArray = weights.getColumnPackedCopy();
+        for(int i = 0; i < weightArray.length; i++) {
+            System.out.println(weightArray[i]);
+        }
+
+        XYSeriesCollection data = new XYSeriesCollection();
+
+        XYSeries regressionEstimate = new XYSeries("Housing Supply vs. Time");
         double x = 0;
-        while(x <= 50) {
+        while(x <= 20) {
             double y = multiplyByWeights(x, weights);
-            series.add(x, y);
+            regressionEstimate.add(x, y);
             x++;
         }
-            XYSeriesCollection data = new XYSeriesCollection(series);
 
-            JFreeChart lineChart = ChartFactory.createXYLineChart(
-                    "Housing Supply vs. Time",
-                    "Time", "Housing Supply",
-                    data,
-                    PlotOrientation.VERTICAL,
-                    false, false, false
-            );
-            NumberAxis yAxis = new NumberAxis();
-            yAxis.setTickUnit(new NumberTickUnit(10000));
-            yAxis.setRange(230000, 350000);
-            yAxis.setAutoRange(true);
-            XYPlot plot = (XYPlot) lineChart.getPlot();
-            plot.setDomainGridlinesVisible(false);
-            plot.setRangeGridlinesVisible(false);
-            plot.setRangeAxis(yAxis);
-            File f = new File("src/main/Images/housingSupplyVsTime.png");
-            ChartUtils.saveChartAsPNG(f, lineChart, 1024, 1024);
+        XYSeries givenDataPoints = new XYSeries("Given Points");
+        for(int i = 0; i < housingUnits.length; i++) {
+            givenDataPoints.add(i, housingUnits[i]);
+        }
+
+        data.addSeries(regressionEstimate);
+         data.addSeries(givenDataPoints);
+
+        JFreeChart lineChart = ChartFactory.createXYLineChart(
+                "Vacant Housing vs. Time",
+                "Time", "Vacant Units",
+                data,
+                PlotOrientation.VERTICAL,
+                false, false, false
+        );
+
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setTickUnit(new NumberTickUnit(1000));
+        yAxis.setRange(12000, 25000);
+
+        NumberAxis xAxis = new NumberAxis();
+        xAxis.setTickUnit(new NumberTickUnit(1));
+        XYPlot plot = (XYPlot) lineChart.getPlot();
+        plot.setDomainGridlinesVisible(false);
+        plot.setRangeGridlinesVisible(false);
+        plot.setRangeAxis(yAxis);
+        XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+        renderer.setSeriesLinesVisible(0, true);
+        renderer.setSeriesLinesVisible(1, false);
+        renderer.setSeriesShapesVisible(0, false);
+        renderer.setSeriesShapesVisible(1, true);
+        File f = new File("src/main/Images/housingSupplyVsTime.png");
+        ChartUtils.saveChartAsPNG(f, lineChart, 1024, 1024);
     }
 
     public static double multiplyByWeights(double x, Matrix weights) {
         double[] weightArray = weights.getColumnPackedCopy();
 
         Polynomial polynomial = new Polynomial(weightArray);
-        System.out.println();
-        for(int i = 0; i < weightArray.length; i++) {
-            System.out.println(weightArray[i]);
-        }
-        System.out.println();
         return polynomial.evaluate(x);
     }
 
