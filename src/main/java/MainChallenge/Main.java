@@ -15,6 +15,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -108,7 +109,6 @@ public class Main {
                         11682,
                         10736
                 },
-
                 timeZero
         };
 
@@ -132,9 +132,11 @@ public class Main {
         // get U and V matrices
         // and their transposed counterparts
         Matrix UMatrix = svd.getU();
+
         //U is orthogonal, so its inverse is its transpose
         Matrix transposedUMatrix = UMatrix.transpose();
         Matrix VMatrix = svd.getV();
+
         //this is also the case with V
         Matrix transposedVMatrix = VMatrix.transpose();
 
@@ -178,8 +180,8 @@ public class Main {
 
         // convert weights Matrix to a vector and print them out
         double[] weightArray = weights.getColumnPackedCopy();
-        for(int i = 0; i < weightArray.length; i++) {
-            System.out.println(weightArray[i]);
+        for(double v: weightArray) {
+            System.out.println(v);
         }
 
         // initialize XYSeriesCollection
@@ -223,7 +225,7 @@ public class Main {
                 false, false, false
         );
 
-        // changes scale of yAxss to fit all data points
+        // changes scale of yAxis to fit all data points
         NumberAxis yAxis = new NumberAxis();
         yAxis.setTickUnit(new NumberTickUnit(5000));
         yAxis.setRange(0, 100000);
