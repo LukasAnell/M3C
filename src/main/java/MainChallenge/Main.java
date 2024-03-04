@@ -78,8 +78,6 @@ public class Main {
                 },
                 {
                     // housing prices
-                        321662,
-                        290240,
                         287331,
                         254806,
                         256336,
@@ -91,22 +89,24 @@ public class Main {
                         435367,
                         453289,
                         506074,
+                        601436,
+                        666139
                 },
                 {
                     // vacant housing
-                        12604,
-                        12416,
-                        12149,
-                        11890,
-                        11717,
-                        11060,
-                        10672,
-                        11388,
-                        12057,
-                        12963,
-                        13002,
-                        14571,
-                        15568
+                        12312,
+                        12340,
+                        11962,
+                        12418,
+                        12632,
+                        13424,
+                        14487,
+                        15557,
+                        15104,
+                        14878,
+                        12724,
+                        11682,
+                        10736
                 },
 
                 timeZero
@@ -150,9 +150,6 @@ public class Main {
 
         // vector that stores the dependent values
         double[] dependent = new double[] {
-                7902,
-                8501,
-                8952,
                 9022,
                 8972,
                 8899,
@@ -162,7 +159,10 @@ public class Main {
                 10730,
                 11643,
                 12112,
-                11199
+                11199,
+                11751,
+                5183,
+                13368
         };
 
         // constructs a Matrix of the dependent values and takes the transpose
