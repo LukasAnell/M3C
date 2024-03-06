@@ -18,8 +18,161 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class Main {
+    public static double[] time = new double[] {
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+    };
+
+    public static double[] vacantHousing = new double[] {
+            12312,
+            12340,
+            11962,
+            12418,
+            12632,
+            13424,
+            14487,
+            15557,
+            15104,
+            14878,
+            12724,
+            11682,
+            10736
+    };
+
     public static void main(String[] args) throws IOException {
-        graphingAndValues();
+        // graphingAndValues();
+        Guess guess = new Guess(new double[] {1, 1, 1, 1});
+        for(int i = 0; i < 2; i++) {
+            gaussNewton(time, vacantHousing, guess);
+            System.out.println(i);
+        }
+        System.out.println(guess);
+
+        graph(guess, vacantHousing, 0, 50);
+    }
+
+    public static void graph(Guess guess, double[] dependent, double start, double end) throws IOException {
+        // initialize XYSeriesCollection
+        XYSeriesCollection data = new XYSeriesCollection();
+
+        // initialize new XYSeries that will store dependent vs independent relationship
+        XYSeries regressionEstimate = new XYSeries("");
+
+        // loops through given range of x values
+        // and computes the y values at a given point
+        // then adds ordered pair to XYSeries object
+        // this also prints out estimates at 10 years, 20 years, and 50 years
+        double x = start;
+        System.out.println();
+        while(x <= end) {
+            double y = guess.evaluateActual(x);
+            if(x == 10 || x == 20 || x == 50) {
+                System.out.println(y);
+            }
+            regressionEstimate.add(x, y);
+            x++;
+        }
+
+        // plots given data points as a scatterplot on the same graph as the line
+        XYSeries givenDataPoints = new XYSeries("Given Points");
+        for(int i = 0; i < dependent.length; i++) {
+            givenDataPoints.add(i, dependent[i]);
+        }
+
+        // adds XYSeries objects to seriesCollection object
+        data.addSeries(regressionEstimate);
+        data.addSeries(givenDataPoints);
+
+        // initializes lineChart with given title
+        // and seriesCollection object as data source
+        JFreeChart lineChart = ChartFactory.createXYLineChart(
+                "Vacant Housing vs. Time",
+                "Time", "Vacant Units",
+                data,
+                PlotOrientation.VERTICAL,
+                false, false, false
+        );
+
+        // changes scale of yAxis to fit all data points
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setTickUnit(new NumberTickUnit(5000));
+        yAxis.setRange(0, 100000);
+
+        // initializes plot with domain and range grid hidden
+        // and rangeAxis set to pre-determined yAxis
+        XYPlot plot = (XYPlot) lineChart.getPlot();
+        plot.setDomainGridlinesVisible(false);
+        plot.setRangeGridlinesVisible(false);
+        plot.setRangeAxis(yAxis);
+
+        // initializes renderer and makes it so:
+        // line graph lines are visible but data points are hidden
+        // and
+        // scatter plot lines are hidden but data points are visible
+        XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+        renderer.setSeriesLinesVisible(0, true);
+        renderer.setSeriesLinesVisible(1, false);
+        renderer.setSeriesShapesVisible(0, false);
+        renderer.setSeriesShapesVisible(1, true);
+
+        // saves chart as an image
+        File f = new File("src/main/Images/vacantHousesVsTime.png");
+        ChartUtils.saveChartAsPNG(f, lineChart, 1024, 1024);
+    }
+
+    public static void gaussNewton(double[] independent, double[] dependent, Guess guess) {
+        double[][] jacobian2DArray = new double[independent.length][4];
+
+        for(int c = 0; c < jacobian2DArray[0].length; c++) {
+            for(int r = 0; r < jacobian2DArray.length; r++) {
+                switch(c) {
+                    case 0:
+                        jacobian2DArray[r][c] = guess.evaluateDerivativeOne(independent[r]);
+                        break;
+                    case 1:
+                        jacobian2DArray[r][c] = guess.evaluateDerivativeTwo(independent[r]);
+                        break;
+                    case 2:
+                        jacobian2DArray[r][c] = guess.evaluateDerivativeThree(independent[r]);
+                        break;
+                    case 3:
+                        jacobian2DArray[r][c] = guess.evaluateDerivativeFour(independent[r]);
+                        break;
+                }
+            }
+        }
+
+        Matrix jacobianMatrix = new Matrix(jacobian2DArray).transpose();
+
+        matrixToString(jacobianMatrix);
+
+        Matrix multJacobianMatrix = jacobianMatrix.transpose().times(jacobianMatrix);
+
+        double[] residualArray = new double[dependent.length];
+        for(int i = 0; i < residualArray.length; i++) {
+            residualArray[i] = dependent[i] - guess.evaluateActual(independent[i]);
+        }
+        Matrix residualMatrix = new Matrix(new double[][] {residualArray}).transpose();
+        Matrix result = getPseudoInverse(multJacobianMatrix).times(jacobianMatrix.transpose());
+
+        System.out.println("result " + result.getRowDimension() + " " + result.getColumnDimension());
+        System.out.println("residual: " + residualMatrix.getRowDimension() + " " + residualMatrix.getColumnDimension());
+
+        Matrix parameterMatrix = new Matrix(new double[][] {guess.parameters}).transpose();
+        Matrix resultMult = result.times(residualMatrix);
+        Matrix paramMinusResult = parameterMatrix.minus(resultMult);
+        guess.parameters = paramMinusResult.getColumnPackedCopy();
     }
 
     public static void graphingAndValues() throws IOException {
@@ -38,25 +191,6 @@ public class Main {
                 1,
                 1,
                 1
-        };
-
-        double[] time = new double[] {
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15
         };
 
         // initialize matrix containing independent variables
@@ -236,7 +370,17 @@ public class Main {
         // multiplies the two previous matrices, will be used in SVD
         Matrix multMatrix = independentVals.times(unTransposedIndependentsMatrix);
 
+        // gets pseudoInverse
+        Matrix pseudoInverse = getPseudoInverse(multMatrix);
 
+        // computes the weights Matrix by multiplying
+        // the pseudoInverse by the independentVals Matrix
+        // then by the dependentVals Matrix, and then taking the transpose
+        // weights = Independents^-1 * Dependents
+        return pseudoInverse.times(independentVals).times(dependentVals).transpose();
+    }
+
+    public static Matrix getPseudoInverse(Matrix multMatrix) {
         // SVD is performed on the multMatrix
         SingularValueDecomposition svd = new SingularValueDecomposition(multMatrix);
 
@@ -259,13 +403,7 @@ public class Main {
         Matrix svdMatrix = createSVDArray(svds, transposedVMatrix.getColumnDimension(), transposedUMatrix.getRowDimension());
 
         // create PseudoInverse by multiplying the parts together
-        Matrix pseudoInverse = VMatrix.times(svdMatrix).times(transposedUMatrix);
-
-        // computes the weights Matrix by multiplying
-        // the pseudoInverse by the independentVals Matrix
-        // then by the dependentVals Matrix, and then taking the transpose
-        // weights = Independents^-1 * Dependents
-        return pseudoInverse.times(independentVals).times(dependentVals).transpose();
+        return VMatrix.times(svdMatrix).times(transposedUMatrix);
     }
 
     public static double multiplyByWeights(double x, Matrix weights) {
@@ -294,4 +432,13 @@ public class Main {
         return new Matrix(svdMatrix);
     }
 
+    public static void matrixToString(Matrix m) {
+        double[][] arr = m.getArray();
+        for(int c = 0; c < arr[0].length; c++) {
+            for(int r = 0; r < arr.length; r++) {
+                System.out.print(arr[r][c]+", ");
+            }
+            System.out.println();
+        }
+    }
 }
