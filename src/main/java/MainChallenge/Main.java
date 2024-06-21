@@ -6,7 +6,9 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTick;
 import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -18,6 +20,22 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class Main {
+    public static double[] timeZero = new double[] {
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+    };
+
     public static double[] time = new double[] {
             0,
             1,
@@ -31,27 +49,95 @@ public class Main {
             9,
             10,
             11,
-            12
+            12,
     };
 
-    public static double[] vacantHousing = new double[] {
-            12312,
-            12340,
-            11962,
-            12418,
-            12632,
-            13424,
-            14487,
-            15557,
-            15104,
-            14878,
-            12724,
-            11682,
-            10736
+    public static double[] timeSquared = new double[] {
+            0,
+            1,
+            4,
+            9,
+            16,
+            25,
+            36,
+            49,
+            64,
+            81,
+            100,
+            121,
+            144,
+    };
+
+    public static double[] timeCubed = new double[] {
+            0,
+            1,
+            64,
+            729,
+            4096,
+            15625,
+            46656,
+            117649,
+            262144,
+            531441,
+            1000000,
+            1771561,
+            2985984,
+    };
+
+    public static double[] medianHouseholdIncome = new double[] {
+            60665,
+            61856,
+            63470,
+            65277,
+            67365,
+            70594,
+            74458,
+            79565,
+            85562,
+            92263,
+            97185,
+            105391,
+            116068,
+    };
+
+    public static double[][] independentVars = new double[][] {
+            timeZero,
+            time,
+//            timeSquared,
+//            timeCubed,
+    };
+
+    public static double[] dependentVars = new double[] {
+            287331,
+            254806,
+            256336,
+            288632,
+            302913,
+            329175,
+            356518,
+            396982,
+            435367,
+            453289,
+            506074,
+            601436,
+            666139,
     };
 
     public static void main(String[] args) throws IOException {
+        LinearRegression test = new LinearRegression(
+                "Median Listing Price vs. Time",
+                "Time",
+                "Median Listing Price",
+                50,
+                0.1,
+                independentVars,
+                dependentVars
+        );
+        test.graph();
+
+        // testingOldMethods();
         // graphingAndValues();
+        /*
         Guess guess = new Guess(new double[] {1, 1, 1, 1});
         for(int i = 0; i < 2; i++) {
             gaussNewton(time, vacantHousing, guess);
@@ -60,6 +146,91 @@ public class Main {
         System.out.println(guess);
 
         graph(guess, vacantHousing, 0, 50);
+         */
+    }
+
+    public static void testingOldMethods() throws IOException {
+        double[][] independents = new double[][] {
+                timeZero
+        };
+        Matrix transposedIndependentsMatrix = new Matrix(independents);
+        Matrix independentsMatrix = transposedIndependentsMatrix.transpose();
+
+        Matrix multMatrix = transposedIndependentsMatrix.times(independentsMatrix);
+
+        SingularValueDecomposition svd = new SingularValueDecomposition(multMatrix);
+
+        Matrix uMatrix = svd.getU();
+        Matrix transposedUMatrix = uMatrix.transpose();
+
+        Matrix vMatrix = svd.getV();
+        Matrix transposedVMatrix = vMatrix.transpose();
+
+        double[] svds = svd.getSingularValues();
+        Matrix svdMatrix = createSVDArray(svds, transposedVMatrix.getColumnDimension(), transposedUMatrix.getRowDimension());
+
+        Matrix pseudoInverse = vMatrix.times(svdMatrix).times(transposedUMatrix);
+
+        Matrix dependentMatrix = new Matrix(new double[][] {
+                dependentVars
+        }).transpose();
+
+        // 4x4 times 4x13 -> 4x4
+        // 4x4 times 13x1 -> error
+        Matrix weights = pseudoInverse.times(transposedIndependentsMatrix).times(dependentMatrix).transpose();
+
+        double[] weightArray = weights.getColumnPackedCopy();
+        for(double v: weightArray) {
+            System.out.println(v);
+        }
+
+        XYSeriesCollection data = new XYSeriesCollection();
+
+        XYSeries regressionEstimate = new XYSeries("Housing Supply vs. Time");
+
+        double x = 0;
+        System.out.println();
+        while(x <= 50) {
+            double y = multiplyByWeights(x, weights);
+            if(x == 10 || x == 20 || x == 50) {
+                System.out.println(y);
+            }
+            regressionEstimate.add(x, y);
+            x++;
+        }
+
+        XYSeries givenDataPoints = new XYSeries("Given Points");
+        for(int i = 0; i < dependentVars.length; i++) {
+            givenDataPoints.add(i, dependentVars[i]);
+        }
+
+        data.addSeries(regressionEstimate);
+        data.addSeries(givenDataPoints);
+
+        JFreeChart lineChart = ChartFactory.createXYLineChart(
+                "Homelessness vs. Time",
+                "Time", "Vacant Units",
+                data,
+                PlotOrientation.VERTICAL,
+                false, false, false
+        );
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setTickUnit(new NumberTickUnit(5000));
+        yAxis.setRange(0, 100000);
+
+        XYPlot plot = (XYPlot) lineChart.getPlot();
+        plot.setDomainGridlinesVisible(false);
+        plot.setRangeGridlinesVisible(false);
+        plot.setRangeAxis(yAxis);
+
+        XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+        renderer.setSeriesLinesVisible(0, true);
+        renderer.setSeriesLinesVisible(1, false);
+        renderer.setSeriesShapesVisible(0, false);
+        renderer.setSeriesShapesVisible(1, true);
+
+        File f = new File("src/main/Images/testingOldMethods.png");
+        ChartUtils.saveChartAsPNG(f, lineChart, 1024, 1024);
     }
 
     public static void graph(Guess guess, double[] dependent, double start, double end) throws IOException {
@@ -365,10 +536,10 @@ public class Main {
         * which would represent the vector as its transpose by default,
         * rather than the intended matrix
         */
-        Matrix unTransposedIndependentsMatrix = independentVals.transpose();
+        Matrix transposedIndependentsMatrix = independentVals.transpose();
 
         // multiplies the two previous matrices, will be used in SVD
-        Matrix multMatrix = independentVals.times(unTransposedIndependentsMatrix);
+        Matrix multMatrix = transposedIndependentsMatrix.times(independentVals);
 
         // gets pseudoInverse
         Matrix pseudoInverse = getPseudoInverse(multMatrix);
@@ -377,7 +548,7 @@ public class Main {
         // the pseudoInverse by the independentVals Matrix
         // then by the dependentVals Matrix, and then taking the transpose
         // weights = Independents^-1 * Dependents
-        return pseudoInverse.times(independentVals).times(dependentVals).transpose();
+        return pseudoInverse.times(transposedIndependentsMatrix).times(dependentVals).transpose();
     }
 
     public static Matrix getPseudoInverse(Matrix multMatrix) {

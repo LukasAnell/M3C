@@ -13,7 +13,7 @@ public class Polynomial{
     //evaluate polynomial at input
     public double evaluate(double input){
         double total = 0;
-        for(int i = 0; i<this.coefficients.length; i++){
+        for(int i = 0; i < this.coefficients.length; i++){
             total += this.coefficients[i] * Math.pow(input, i);
         }
         return total;
@@ -22,10 +22,10 @@ public class Polynomial{
     // returns polynomial as a String
     public String toString(){
         String result = "";
-        for(int i=coefficients.length-1;i>0;i--){
-            result+=coefficients[i]+"x^"+ (i) +" + ";
+        for(int i = coefficients.length - 1; i > 0; i--){
+            result += coefficients[i]+"x^"+ i + " + ";
         }
-        result+=coefficients[0];
+        result += coefficients[0];
         return result;
     }
 }
