@@ -124,29 +124,27 @@ public class Main {
     };
 
     public static void main(String[] args) throws IOException {
-        LinearRegression test = new LinearRegression(
-                "Median Listing Price vs. Time",
-                "Time",
-                "Median Listing Price",
-                50,
-                0.1,
-                independentVars,
-                dependentVars
-        );
-        test.graph();
+//        LinearRegression test = new LinearRegression(
+//                "Median Listing Price vs. Time",
+//                "Time",
+//                "Median Listing Price",
+//                50,
+//                0.1,
+//                independentVars,
+//                dependentVars
+//        );
+//        test.graph();
 
         // testingOldMethods();
         // graphingAndValues();
-        /*
         Guess guess = new Guess(new double[] {1, 1, 1, 1});
         for(int i = 0; i < 2; i++) {
-            gaussNewton(time, vacantHousing, guess);
+            gaussNewton(time, dependentVars, guess);
             System.out.println(i);
         }
         System.out.println(guess);
 
-        graph(guess, vacantHousing, 0, 50);
-         */
+        graph(guess, dependentVars, 0, 50);
     }
 
     public static void testingOldMethods() throws IOException {
@@ -268,7 +266,7 @@ public class Main {
         // initializes lineChart with given title
         // and seriesCollection object as data source
         JFreeChart lineChart = ChartFactory.createXYLineChart(
-                "Vacant Housing vs. Time",
+                "gaussNewton test",
                 "Time", "Vacant Units",
                 data,
                 PlotOrientation.VERTICAL,
@@ -277,8 +275,8 @@ public class Main {
 
         // changes scale of yAxis to fit all data points
         NumberAxis yAxis = new NumberAxis();
-        yAxis.setTickUnit(new NumberTickUnit(5000));
-        yAxis.setRange(0, 100000);
+        yAxis.setTickUnit(new NumberTickUnit(100000));
+        yAxis.setRange(0, 1000000);
 
         // initializes plot with domain and range grid hidden
         // and rangeAxis set to pre-determined yAxis
@@ -298,7 +296,7 @@ public class Main {
         renderer.setSeriesShapesVisible(1, true);
 
         // saves chart as an image
-        File f = new File("src/main/Images/vacantHousesVsTime.png");
+        File f = new File("src/main/Images/gaussNewtonTest.png");
         ChartUtils.saveChartAsPNG(f, lineChart, 1024, 1024);
     }
 
@@ -335,7 +333,7 @@ public class Main {
             residualArray[i] = dependent[i] - guess.evaluateActual(independent[i]);
         }
         Matrix residualMatrix = new Matrix(new double[][] {residualArray}).transpose();
-        Matrix result = getPseudoInverse(multJacobianMatrix).times(jacobianMatrix.transpose());
+        Matrix result = getPseudoInverse(multJacobianMatrix).times(jacobianMatrix.transpose()).transpose();
 
         System.out.println("result " + result.getRowDimension() + " " + result.getColumnDimension());
         System.out.println("residual: " + residualMatrix.getRowDimension() + " " + residualMatrix.getColumnDimension());

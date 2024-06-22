@@ -12,11 +12,9 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 
 public class LinearRegression {
     private String title;
@@ -43,6 +41,56 @@ public class LinearRegression {
         stepSize = sS;
         independentVariables = iV;
         dependentVariable = dV;
+    }
+
+    private void graphWithGaussNewton() {
+        Guess guess = new Guess(new double[] {1, 1, 1, 1});
+        for(int i = 0; i < 2; i++) {
+            gaussNewton(guess, independentVariables[0]);
+            System.out.println(i);
+        }
+        System.out.println(guess);
+    }
+
+    private void gaussNewton(Guess guess, double[] iV) {
+        double[][] jacobian2DArray = new double[iV.length][4];
+
+        for(int c = 0; c < jacobian2DArray[0].length; c++) {
+            for(int r = 0; r < jacobian2DArray.length; r++) {
+                switch(c) {
+                    case 0:
+                        jacobian2DArray[r][c] = guess.evaluateDerivativeOne(iV[r]);
+                        break;
+                    case 1:
+                        jacobian2DArray[r][c] = guess.evaluateDerivativeTwo(iV[r]);
+                        break;
+                    case 2:
+                        jacobian2DArray[r][c] = guess.evaluateDerivativeThree(iV[r]);
+                        break;
+                    case 3:
+                        jacobian2DArray[r][c] = guess.evaluateDerivativeFour(iV[r]);
+                        break;
+                }
+            }
+        }
+
+        Matrix jacobianMatrix = new Matrix(jacobian2DArray).transpose();
+        Matrix transposedJacobianMatrix = jacobianMatrix.transpose();
+        Main.matrixToString(jacobianMatrix);
+
+        Matrix multJacobianMatrix = transposedJacobianMatrix.times(jacobianMatrix);
+
+        double[] residualArray = new double[dependentVariable.length];
+        for(int i = 0; i < residualArray.length; i++) {
+            residualArray[i] = dependentVariable[i] - guess.evaluateActual(iV[i]);
+        }
+        Matrix residualMatrix = new Matrix(new double[][] {residualArray}).transpose();
+        Matrix result = getPseudoInverse(multJacobianMatrix).times(transposedJacobianMatrix);
+
+        Matrix parameterMatrix = new Matrix(new double[][] {guess.parameters}).transpose();
+        Matrix resultMult = result.times(residualMatrix);
+        Matrix paramMinusResult = parameterMatrix.minus(resultMult);
+        guess.parameters = paramMinusResult.getColumnPackedCopy();
     }
 
     public void graph() throws IOException {
@@ -132,7 +180,6 @@ public class LinearRegression {
         Matrix uMatrix = svd.getU();
         Matrix transposedUMatrix = uMatrix.transpose();
         Matrix vMatrix = svd.getV();
-        // Matrix transposedVMatrix = vMatrix.transpose();
 
         Matrix svdMatrix = replaceDiagonal(svd.getS());
 
@@ -146,18 +193,6 @@ public class LinearRegression {
         }
         return new Matrix(svdArray);
     }
-
-    /*
-    private Matrix createSVDMatrix(double[] singularValues, int rows, int cols) {
-        double[][] svdArray = new double[rows][cols];
-
-        for(int i = 0; i < Math.min(rows, cols); i++) {
-            svdArray[i][i] = 1.0 / singularValues[i];
-        }
-
-        return new Matrix(svdArray);
-    }
-     */
 
     public void setStepCount(int sC) {
         stepCount = sC;
