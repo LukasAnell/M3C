@@ -28,12 +28,11 @@ def makeG(function: Expr, inputData: [[]]) -> []:
 
 
 def findGamma(G: [], x_n: [], x_n1: []) -> float:
-    numerator = 0
-    denominator = 0
-    for i in range(len(G)):
-        numerator += G[i] * x_n1[i]
-        denominator += G[i] * (x_n[i] - x_n1[i])
-    return numerator / denominator
+    x_n = np.array(x_n)
+    x_n1 = np.array(x_n1)
+    numerator = np.transpose(x_n - x_n1) * np.matrix(evaluate(G, x_n))
+    denominator = np.transpose(np.matrix(evaluate(G, x_n))) * np.matrix(evaluate(G, x_n))
+    return float(numerator / denominator)
 
 
 def iterate(G: [], J: [[]], errorMargin: float) -> []:
@@ -44,7 +43,7 @@ def iterate(G: [], J: [[]], errorMargin: float) -> []:
     while r > errorMargin:
         gamma = findGamma(G, x_n, x_n1)
         temp = x_n1
-        x_n1 = x_n - gamma * np.matrix(evaluate(J, x_n)) * x_n
+        x_n1 = x_n - gamma * np.matrix(evaluate(J, x_n))
         x_n = temp
         r = np.linalg.norm(x_n1 - x_n)
     return list(x_n1)
