@@ -1,5 +1,8 @@
+from sympy import *
+
+
 def main():
-    print("hi")
+    pass
 
 
 if __name__ == '__main__':
