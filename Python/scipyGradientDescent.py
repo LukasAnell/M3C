@@ -63,19 +63,25 @@ def main():
 
     xColumn, yColumns = getDataPoints("TCP23_data_vetted.xlsx")
     xData = xColumn[1]
-    yDataList = yColumns[2]
+    yDataList = yColumns[3]
     dataLabel = yDataList[0]
     xValues, yValues = getXYValues(xData, yDataList[1], '--')
     ax = plt.gca()
-    ax.set_ylim([0, 500])
+
+    # also will need to change graph bounds based on scaling
+    ax.set_ylim([0, 5.0000])
     ax.set_xlim([min(xData) - 1, max(xData) + 1])
+    # use if exp overflow error
+    # yValues = [y / 10000 for y in yValues]
     plotData(xValues, yValues, dataLabel)
 
-    initial_guesses = [1,1,2014, 128]
+    # also change initial guess based on scaling
+    initial_guesses = [1,1,2017,3.5620]
     bounds = (0, [np.inf, np.inf, np.inf, np.inf])
     xValues = [x for x in xValues]
     coefficients, _ = scipy.optimize.curve_fit(logistic, xValues, yValues, p0=initial_guesses, bounds=bounds, method='trf')
     # coefficients, _ = scipy.optimize.curve_fit(logistic, xValues, yValues)
+
     graphCurveFit(coefficients, logistic, xData)
 
     plt.legend()
