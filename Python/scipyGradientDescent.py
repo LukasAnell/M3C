@@ -1,7 +1,9 @@
 import numpy as np
-import scipy.optimize
+import scipy
+from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import pandas as pd
+from scipy.special import expit
 
 
 def makeRandomInputPoints(function: callable, range: tuple) -> tuple:
@@ -12,58 +14,69 @@ def makeRandomInputPoints(function: callable, range: tuple) -> tuple:
 
 def getDataPoints(filePath: str) -> ():
     data = np.transpose(pd.read_excel(filePath).values)
-    yDataTitle = data[0][1]
-    xDataTitles = [inner[0] for inner in data]
-    yDataTuple = (yDataTitle, data[0][2:])
-    xDataTuples = [(xDataTitles[i], data[i][2:]) for i in range(1, len(xDataTitles))]
-    return yDataTuple, xDataTuples
+    xDataTitle = data[0][1]
+    yDataTitles = [inner[0] for inner in data]
+    xDataTuple = (xDataTitle, data[0][2:])
+    yDataTuples = [(yDataTitles[i], data[i][2:]) for i in range(1, len(yDataTitles))]
+    return xDataTuple, yDataTuples
 
 
-def graphAll(coefficients: [], function: callable, xValues: []):
-    xIterator = np.linspace(min(xValues), max(xValues), 1000)
-    functionYValues = function(xIterator, *coefficients)
-    plt.plot(xIterator, functionYValues, label='curve fit')
+def graphCurveFit(coefficients: [], function: callable, xValues: []):
+    xData = np.linspace(min(xValues) - 1, max(xValues) + 1, 1000)
+    yData = function(xData, *coefficients)
+    plt.plot(xData, yData, label="Fitted Curve")
 
 
-def f(x, A=1, B=1, C=1):
-    return A / (1 + np.exp(-B * (x - C)))
+def logistic(x, A=1, B=1, C=1, D=1):
+    return A / (1 + expit(-B * (x - C))) + D
 
 
-def getXYValues(yData, xData, delimiter):
-    yValues = [yData[i] for i in range(len(yData)) if xData[i] != delimiter]
-    xValues = [xData[i] for i in range(len(xData)) if xData[i] != delimiter]
-    return yValues, xValues
+def polynomial(x, A=1, B=1, C=1):
+    return A * x**2 + B * x + C
 
 
-def plotData(yData: [], xData: [], xLabel: str):
-    plt.scatter(yData, xData, label=xLabel)
+def exponential(x, A=1, B=1, C=1, D=1):
+    return A * expit(B * (x - C)) + D
 
 
-def plotMultipleDatas(yData: [], xDatas: [()]):
-    for xData in xDatas:
-        plt.scatter(yData, xData[1], label=xData[0])
+def getXYValues(xData, yData, delimiter):
+    xValues = [float(xData[i]) for i in range(len(xData)) if yData[i] != delimiter]
+    yValues = [float(yData[i]) for i in range(len(yData)) if yData[i] != delimiter]
+    return xValues, yValues
+
+
+def plotData(xData: [], yData: [], yLabel: str):
+    plt.scatter(xData, yData, label=yLabel)
+
+
+def plotMultipleDatas(xData: [], yDatas: [()]):
+    for yData in yDatas:
+        plt.scatter(xData, yData[1], label=yData[0])
 
 
 def main():
     # range = (-20, 20)
-    # xData, yData = makeInputPoints(f, range)
-    # coefficients = scipy.optimize.curve_fit(f, xData, yData)[0]
-    # graphAll(xData, yData, coefficients, f, range)
+    # xData, yData = makeRandomInputPoints(logistic, range)
+    # coefficients = scipy.optimize.curve_fit(logistic, xData, yData)[0]
+    # plotData(xData, yData, "Random Data")
+    # graphAll(coefficients, logistic, xData)
 
-    yColumn, xColumns = getDataPoints("TCP23_data_vetted.xlsx")
-    yData = yColumn[1]
-    xDataList = xColumns[1]
-    xLabel = xDataList[0]
-    yValues, xValues = getXYValues(yData, xDataList[1], '--')
+    xColumn, yColumns = getDataPoints("TCP23_data_vetted.xlsx")
+    xData = xColumn[1]
+    yDataList = yColumns[2]
+    dataLabel = yDataList[0]
+    xValues, yValues = getXYValues(xData, yDataList[1], '--')
     ax = plt.gca()
-    ax.set_ylim([0, 4000])
-    ax.set_xlim([min(yData) - 1, max(yData) + 1])
-    plotData(yValues, xValues, xLabel)
+    ax.set_ylim([0, 500])
+    ax.set_xlim([min(xData) - 1, max(xData) + 1])
+    plotData(xValues, yValues, dataLabel)
 
-    initial_guesses = [1, 1, 1]
-    bounds = (0, [np.inf, np.inf, np.inf])
-    coefficients, _ = scipy.optimize.curve_fit(f, xValues, yValues, p0=initial_guesses)
-    graphAll(coefficients, f, xValues)
+    initial_guesses = [1,1,2014, 128]
+    bounds = (0, [np.inf, np.inf, np.inf, np.inf])
+    xValues = [x for x in xValues]
+    coefficients, _ = scipy.optimize.curve_fit(exponential, xValues, yValues, p0=initial_guesses, bounds=bounds, method='trf')
+    # coefficients, _ = scipy.optimize.curve_fit(logistic, xValues, yValues)
+    graphCurveFit(coefficients, exponential, xData)
 
     plt.legend()
     plt.show()
