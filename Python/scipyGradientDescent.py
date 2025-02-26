@@ -28,7 +28,7 @@ def graphCurveFit(coefficients: [], function: callable, xValues: []):
 
 
 def logistic(x, A=1, B=1, C=1, D=1):
-    return A / (1 + expit(-B * (x - C))) + D
+    return A / (1 + np.exp(-B * (x - C))) + D
 
 
 def polynomial(x, A=1, B=1, C=1):
@@ -36,7 +36,7 @@ def polynomial(x, A=1, B=1, C=1):
 
 
 def exponential(x, A=1, B=1, C=1, D=1):
-    return A * expit(B * (x - C)) + D
+    return A * np.exp(B * (x - C)) + D
 
 
 def getXYValues(xData, yData, delimiter):
@@ -74,9 +74,9 @@ def main():
     initial_guesses = [1,1,2014, 128]
     bounds = (0, [np.inf, np.inf, np.inf, np.inf])
     xValues = [x for x in xValues]
-    coefficients, _ = scipy.optimize.curve_fit(exponential, xValues, yValues, p0=initial_guesses, bounds=bounds, method='trf')
+    coefficients, _ = scipy.optimize.curve_fit(logistic, xValues, yValues, p0=initial_guesses, bounds=bounds, method='trf')
     # coefficients, _ = scipy.optimize.curve_fit(logistic, xValues, yValues)
-    graphCurveFit(coefficients, exponential, xData)
+    graphCurveFit(coefficients, logistic, xData)
 
     plt.legend()
     plt.show()
