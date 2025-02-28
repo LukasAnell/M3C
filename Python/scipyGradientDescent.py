@@ -61,14 +61,14 @@ def plotMultipleDatas(xData: [], yDatas: [()]):
         plt.scatter(xData, yData[1], label=yData[0])
 
 
-def plotAllCountries(xData: [], yDataList: [], fitCurve: bool, includeErrorBars: bool, function: callable, deScalingFactor: int):
+def plotAllCountries(xData: [], yDataList: [], fitCurve: bool, includeErrorBars: bool, function: callable, deScalingFactor: int, delimiter: str):
     # change graph limits based on extremes of all data points
     ax = plt.gca()
     yLim = 0
     xLim = 0
     # plot data points for all countries
-    for yData in yDataList[1:]:
-        xValues, yValues = getXYValues(xData, yData[1], '--')
+    for yData in yDataList:
+        xValues, yValues = getXYValues(xData, yData[1], delimiter)
         xMean, yMean = statistics.mean(xValues), statistics.mean(yValues)
         yValues = [y / deScalingFactor for y in yValues]
 
@@ -93,13 +93,13 @@ def plotAllCountries(xData: [], yDataList: [], fitCurve: bool, includeErrorBars:
     ax.set_xlim([min(xData) - 1, max(xData) + 1])
 
 def scatterData(xData: [], yData: [], yLabel: str):
-    # plot data points
+    # scatter data points
     plt.scatter(xData, yData, label=yLabel)
 
 
-def plotSingleCountry(xData: [], yData: [], fitCurve: bool, includeErrorBars: bool, function: callable, deScalingFactor: int, dataLabel: str):
+def plotSingleCountry(xData: [], yData: [], fitCurve: bool, includeErrorBars: bool, function: callable, deScalingFactor: int, dataLabel: str, delimiter: str):
     # plot data points for United States
-    xValues, yValues = getXYValues(xData, yData, '--')
+    xValues, yValues = getXYValues(xData, yData, delimiter)
     xMean, yMean = statistics.mean(xValues), statistics.mean(yValues)
     yValues = [y / deScalingFactor for y in yValues]
 
@@ -144,8 +144,8 @@ def main():
     dataLabel = yDataList[0]
 
     # plot all countries
-    # plotAllCountries(xData, yColumnList[:3] + yColumnList[4:], False, False, exponential, 1)
-    plotSingleCountry(xData, yDataList[1], True, True, logistic, 1, dataLabel)
+    # plotAllCountries(xData, yColumnList[:3] + yColumnList[4:], False, False, exponential, 1, '--')
+    plotSingleCountry(xData, yDataList[1], True, True, logistic, 1, dataLabel, '--')
 
     """
     xValues, yValues = getXYValues(xData, yDataList[1], '--')
@@ -180,6 +180,7 @@ def main():
     # display graph with data points and fitted curve
     plt.legend()
     plt.show()
+    plt.close()
 
 
 if __name__ == '__main__':
