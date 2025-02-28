@@ -61,7 +61,7 @@ def plotMultipleDatas(xData: [], yDatas: [()]):
         plt.scatter(xData, yData[1], label=yData[0])
 
 
-def plotAllCountries(xData: [], yDataList: [], fitCurve: bool, function: callable, deScalingFactor: int):
+def plotAllCountries(xData: [], yDataList: [], fitCurve: bool, includeErrorBars: bool, function: callable, deScalingFactor: int):
     # change graph limits based on extremes of all data points
     ax = plt.gca()
     yLim = 0
@@ -80,8 +80,15 @@ def plotAllCountries(xData: [], yDataList: [], fitCurve: bool, function: callabl
         if fitCurve:
             initialGuesses = [1, 1, xMean, yMean]
             bounds = (0, [np.inf, np.inf, np.inf, np.inf])
-            coefficients, _ = scipy.optimize.curve_fit(function, xValues, yValues, p0=initialGuesses, bounds=bounds, method='trf')
+            coefficients, covar, infodict, errmsg, ier = scipy.optimize.curve_fit(function, xValues, yValues, p0=initialGuesses, bounds=bounds, method='trf', full_output=True)
             graphCurveFit(coefficients, function, xData)
+
+            if includeErrorBars:
+                # calculate residuals
+                residuals = infodict['fvec']
+                # plot error bars
+                plt.errorbar(xValues, yValues, yerr=np.abs(residuals), fmt='o', label="Error Bars")
+
     ax.set_ylim([0, yLim])
     ax.set_xlim([min(xData) - 1, max(xData) + 1])
 
@@ -90,7 +97,7 @@ def scatterData(xData: [], yData: [], yLabel: str):
     plt.scatter(xData, yData, label=yLabel)
 
 
-def plotUnitedStates(xData: [], yData: [], fitCurve: bool, function: callable, deScalingFactor: int, dataLabel: str):
+def plotSingleCountry(xData: [], yData: [], fitCurve: bool, includeErrorBars: bool, function: callable, deScalingFactor: int, dataLabel: str):
     # plot data points for United States
     xValues, yValues = getXYValues(xData, yData, '--')
     xMean, yMean = statistics.mean(xValues), statistics.mean(yValues)
@@ -102,11 +109,19 @@ def plotUnitedStates(xData: [], yData: [], fitCurve: bool, function: callable, d
     ax.set_xlim([min(xData) - 1, max(xData) + 1])
 
     scatterData(xValues, yValues, dataLabel)
+
     if fitCurve:
+        # plot fitted curve
         initialGuesses = [1, 1, xMean, yMean]
         bounds = (0, [np.inf, np.inf, np.inf, np.inf])
-        coefficients, _ = scipy.optimize.curve_fit(function, xValues, yValues, p0=initialGuesses, bounds=bounds, method='trf')
+        coefficients, covar, infodict, errmsg, ier = scipy.optimize.curve_fit(function, xValues, yValues, p0=initialGuesses, bounds=bounds, method='trf', full_output=True)
         graphCurveFit(coefficients, function, xData)
+
+        if includeErrorBars:
+            # calculate residuals
+            residuals = infodict['fvec']
+            # plot error bars
+            plt.errorbar(xValues, yValues, yerr=np.abs(residuals), fmt='o', label="Error Bars")
 
 
 def main():
@@ -129,8 +144,8 @@ def main():
     dataLabel = yDataList[0]
 
     # plot all countries
-    plotAllCountries(xData, yColumnList[:3] + yColumnList[4:], False, exponential, 1)
-    # plotUnitedStates(xData, yDataList[1], True, exponential, 1, dataLabel)
+    # plotAllCountries(xData, yColumnList[:3] + yColumnList[4:], False, False, exponential, 1)
+    plotSingleCountry(xData, yDataList[1], True, True, logistic, 1, dataLabel)
 
     """
     xValues, yValues = getXYValues(xData, yDataList[1], '--')
