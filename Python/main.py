@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-import scipyGradientDescent as sgd
+import scipyGradientDescent
 from classSciPyGradientDescent import SciPyGradientDescent
 
 
@@ -11,7 +11,7 @@ def plotEBikeSales(
         deScalingFactor: int,
         delimiter: str
 ) -> None:
-    xCol, yColList = sgd.getDataPoints("TCP23_data_vetted.xlsx")
+    xCol, yColList = scipyGradientDescent.getDataPoints("TCP23_data_vetted.xlsx")
     yearData = xCol[1]
     countryNameDict = {
         "United States": 0,
@@ -27,7 +27,7 @@ def plotEBikeSales(
     if len(included) > 1:
         # use plotAllCountries function
         # use the included list to filter the yColList
-        sgd.plotAllCountries(
+        scipyGradientDescent.plotAllCountries(
             yearData,
             [yColList[countryNameDict[country]] for country in included],
             fitCurve,
@@ -38,7 +38,7 @@ def plotEBikeSales(
         )
     else:
         # use plotSingleCountry function
-        sgd.plotSingleCountry(
+        scipyGradientDescent.plotSingleCountry(
             yearData,
             unitsSoldList[1],
             fitCurve,
@@ -73,9 +73,9 @@ def newPlotEBikeSales(
     }
 
     if len(included) > 1:
-        # use plotAllCountries function
+        # use plotMultipleDataSets function
         # use the included list to filter the yColList
-        sgd.plotAllCountries(
+        sgd.plotMultipleDataSets(
             yearData,
             [sgd.yDataList[countryNameDict[country]] for country in included],
             fitCurve,
@@ -85,8 +85,8 @@ def newPlotEBikeSales(
             delimiter
         )
     else:
-        # use plotSingleCountry function
-        sgd.plotSingleCountry(
+        # use plotSingleData function
+        sgd.plotSingleData(
             yearData,
             sgd.yDataList[countryNameDict["United States"]][1],
             fitCurve,
