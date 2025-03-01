@@ -47,7 +47,7 @@ def plotEBikeSales(included: [str], fitCurve: bool, includeErrorBars: bool, curv
 
 
 def main():
-    plotEBikeSales(["United States", "Europe"], True, True, sgd.exponential, 1, '--')
+    plotEBikeSales(["United States"], True, True, sgd.exponential, 1, '--')
 
 
 if __name__ == '__main__':
