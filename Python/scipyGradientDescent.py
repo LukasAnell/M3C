@@ -13,6 +13,15 @@ def makeRandomInputPoints(function: callable, dataRange: tuple) -> tuple:
     return xData, yData
 
 
+def getDataPointsCSV(filePath: str) -> tuple:
+    # read data from CSV file
+    data = np.transpose(pd.read_csv(filePath).values)
+    # extract x and y data
+    xData = data[0]
+    yData = data[1]
+    return xData, yData
+
+
 def getDataPoints(filePath: str) -> tuple:
     # read data from Excel file
     data = np.transpose(pd.read_excel(filePath).values)
@@ -34,6 +43,10 @@ def getXYValues(xData: [], yData: [], delimiter: str) -> tuple:
     return xValues, yValues
 
 
+def biLinear(x: float, y: float, A: float = 1, B: float = 1, C: float = 1) -> float:
+    return A * x + B * y + C
+
+
 def logistic(x: float, A: float = 1, B: float = 1, C: float = 1, D: float = 1) -> float:
     return A / (1 + np.exp(-B * (x - C))) + D
 
@@ -42,8 +55,16 @@ def polynomial(x: float, A: float = 1, B: float = 1, C: float = 1) -> float:
     return A * x**2 + B * x + C
 
 
-def exponential(x: float, A: float = 1, B:float = 1, C: float = 1, D: float = 1) -> float:
+def exponential(x: float, A: float = 1, B: float = 1, C: float = 1, D: float = 1) -> float:
     return A * np.exp(B * (x - C)) + D
+
+
+def linear(x: float, A: float = 1, B: float = 1, C: float = 1) -> float:
+    return A * (x - B) + C
+
+
+def sinusoidal(x: float, A: float = 1, B: float = 1, C: float = 1, D: float = 1) -> float:
+    return A * np.sin(B * (x - C)) + D
 
 
 def graphCurveFit(coefficients: [float], function: callable, xValues: []) -> None:
@@ -142,26 +163,10 @@ def plotSingleCountry(
 
 
 def main():
-    # obtain data points from .xlsx file
-    # xColumn is a tuple with the first element being the x-axis title and the second element being the x-axis data
-    # yColumnList is a list of tuples with the first element being the y-axis title and the second element being the y-axis data
-    # xValues and yValues are filtered to remove any data points with a delimiter (this indicates that there is no data for that point)
-    xColumn, yColumnList = getDataPoints("TCP23_data_vetted.xlsx")
-    xData = xColumn[1]
-    """
-    United States : 0
-    Europe : 1
-    France : 2
-    China : 3
-    India : 4
-    Japan : 5
-    """
-    yDataList = yColumnList[0]
-    dataLabel = yDataList[0]
+    arr1 = [i for i in range(3)]
+    arr2 = [i for i in range(3)]
 
-    # plot all countries
-    # plotAllCountries(xData, yColumnList[:3] + yColumnList[4:], False, False, exponential, 1, '--')
-    plotSingleCountry(xData, yDataList[1], True, True, logistic, 1, dataLabel, '--')
+
 
     # display graph with data points and fitted curve
     plt.legend()

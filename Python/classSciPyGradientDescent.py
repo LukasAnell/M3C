@@ -8,14 +8,15 @@ from matplotlib import pyplot as plt
 
 
 class SciPyGradientDescent:
-    def __init__(self, filePath: str):
-        self.filePath = filePath
-        self.xData, self.yDataList = self.getDataPoints()
+    def __init__(self, filePath1: str, filePath2: str) -> None:
+        self.filePath1 = filePath1
+        self.filePath2 = filePath2
+        # self.xData, self.yDataList = self.getDataPoints()
 
 
     def getDataPoints(self) -> tuple:
         # read data from Excel file
-        data = np.transpose(pd.read_excel(self.filePath).values)
+        data = np.transpose(pd.read_excel(self.filePath1).values)
         # extract x and y data
         xDataTitle = data[0][1]
         yDataTitles = [inner[0] for inner in data]
@@ -25,6 +26,15 @@ class SciPyGradientDescent:
         xDataTuple = (xDataTitle, data[0][2:])
         yDataTupleList = [(yDataTitles[i], data[i][2:]) for i in range(1, len(yDataTitles))]
         return xDataTuple, yDataTupleList
+
+
+    def getDataPointsCSV(self) -> tuple:
+        # read data from multiple files
+        data1 = pd.read_csv(self.filePath1).values
+        data2 = pd.read_csv(self.filePath2).values
+        # extract x and y data
+        return data1, data2
+
 
 
     def getXYValues(self, xData: [], yData: [], delimiter: str) -> tuple:
@@ -39,6 +49,16 @@ class SciPyGradientDescent:
         return xMean, yMean
 
 
+    def calculateRSquared(self, xValues: [], yValues: [], function: callable, coefficients: [float]) -> float:
+        yValues = np.array(yValues, dtype=float)
+        # calculate R^2 value
+        yMean = statistics.mean(yValues)
+        ss_res = np.sum((yValues - function(xValues, *coefficients)) ** 2)
+        ss_tot = np.sum((yValues - yMean) ** 2)
+        r_squared = 1 - (ss_res / ss_tot)
+        return r_squared
+
+
     def graphCurveFit(self, coefficients: [float], function: callable, xValues: []) -> None:
         # plot fitted curve
         xData = np.linspace(min(xValues) - 1, max(xValues) + 1, 1000)
@@ -51,7 +71,7 @@ class SciPyGradientDescent:
         plt.scatter(xData, yData, label=yLabel)
 
 
-    def plotSingleData(self, xData: [], yData: [], fitCurve: bool, includeErrorBars: bool, function: callable, deScalingFactor: int, dataLabel: str, delimiter: str) -> None:
+    def plotSingleData(self, xData: [], yData: [], fitCurve: bool, includeErrorBars: bool, function: callable, initialGuesses: [int], deScalingFactor: int, dataLabel: str, delimiter: str) -> []:
         xValues, yValues = self.getXYValues(xData, yData, delimiter)
         xMean, yMean = self.getXYMean(xValues, yValues)
         yValues = [yValue / deScalingFactor for yValue in yValues]
@@ -63,14 +83,20 @@ class SciPyGradientDescent:
         self.scatterData(xValues, yValues, dataLabel)
 
         if fitCurve:
-            initialGuessses = [1 for i in range(0, len(inspect.signature(function).parameters) - 1)] + [xMean, yMean]
-            bounds = (0, [np.inf for i in range(0, len(initialGuessses))])
+            for i in range(len(initialGuesses)):
+                if initialGuesses[i] == -1:
+                    initialGuesses[i] = 1
+            initialGuesses[-2] = xMean
+            initialGuesses[-1] = yMean
+            bounds = [0, [np.inf for _ in range(0, len(initialGuesses))]]
             coefficients, covar, infodict, errmsg, ier = scipy.optimize.curve_fit(function, xValues, yValues, p0=initialGuesses, bounds=bounds, method='trf', full_output=True)
             self.graphCurveFit(coefficients, function, xData)
 
             if includeErrorBars:
                 residuals = infodict['fvec']
-                plt.errorbar(xValues, yValues, yerr=np.abs(residuals), fmt='0', label="Error Bars")
+                plt.errorbar(xValues, yValues, yerr=np.abs(residuals), fmt='o', label="Error Bars")
+        if fitCurve:
+            return coefficients
 
 
     def plotMultipleDataSets(self, xData: [], yDataList: [[]], fitCurve: bool, includeErrorBars: bool, function: callable, deScalingFactor: int, delimiter: str) -> None:
