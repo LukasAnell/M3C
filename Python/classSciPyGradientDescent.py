@@ -49,11 +49,12 @@ class SciPyGradientDescent:
         return xMean, yMean
 
 
-    def calculateRSquared(self, xValues: [], yValues: [], function: callable, coefficients: [float]) -> float:
+    # calculateRSquared based on residuals
+    def calculateRSquared(self, residuals: [], yValues: [], function: callable, coefficients: [float]) -> float:
         yValues = np.array(yValues, dtype=float)
         # calculate R^2 value
         yMean = statistics.mean(yValues)
-        ss_res = np.sum((yValues - function(xValues, *coefficients)) ** 2)
+        ss_res = np.sum([i ** 2 for i in residuals])
         ss_tot = np.sum((yValues - yMean) ** 2)
         r_squared = 1 - (ss_res / ss_tot)
         return r_squared
@@ -95,8 +96,8 @@ class SciPyGradientDescent:
             if includeErrorBars:
                 residuals = infodict['fvec']
                 plt.errorbar(xValues, yValues, yerr=np.abs(residuals), fmt='o', label="Error Bars")
-        if fitCurve:
-            return coefficients
+            return coefficients, infodict['fvec']
+        return None, None
 
 
     def plotMultipleDataSets(self, xData: [], yDataList: [[]], fitCurve: bool, includeErrorBars: bool, function: callable, deScalingFactor: int, delimiter: str) -> None:

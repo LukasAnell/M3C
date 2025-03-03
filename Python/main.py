@@ -188,11 +188,182 @@ def plotTemperatureVsElectricityDemand(
     plt.close()
 
 
+def plotTemperatureVsTime(
+        fitCurve: bool,
+        includeErrorBars: bool,
+        curveFunction: callable,
+        deScalingFactor: int,
+        delimiter: str
+) -> None:
+    temperatureFilepath = "Spreadsheets/Memphis Climate and Electricity 2019-2024 - Sheet1.csv"
+    timeFilepath = "Spreadsheets/Time - Sheet1.csv"
+    sgd = SciPyGradientDescent(temperatureFilepath, timeFilepath)
+    allDataTuple = sgd.getDataPointsCSV()
+    temperatureData = [x for x in np.transpose(allDataTuple[0])[1]]
+    timeData = [x for x in np.transpose(allDataTuple[1])[0]]
+
+    initialGuesses = [-1, -1, -1]
+
+    coefficients, residuals = sgd.plotSingleData(
+        timeData,
+        temperatureData,
+        fitCurve,
+        includeErrorBars,
+        curveFunction,
+        initialGuesses,
+        deScalingFactor,
+        "Plotted Points",
+        delimiter
+    )
+
+    ax = plt.gca()
+
+    if fitCurve:
+        rSquared = sgd.calculateRSquared(residuals  , temperatureData, curveFunction, coefficients)
+        plt.text(ax.get_xlim()[0], 0, f"R² = {rSquared}", fontsize=14, antialiased=True, verticalalignment='bottom', horizontalalignment='left')
+
+    plt.title("Temperature vs Time")
+    plt.xlabel("Time (months)")
+    plt.ylabel("Temperature (°F)")
+    plt.legend()
+    plt.show()
+    plt.close()
+
+
+def plotDewPointVsTime(
+        fitCurve: bool,
+        includeErrorBars: bool,
+        curveFunction: callable,
+        deScalingFactor: int,
+        delimiter: str
+) -> None:
+    dewPointFilepath = "Spreadsheets/Memphis Climate and Electricity 2019-2024 - Sheet1.csv"
+    timeFilepath = "Spreadsheets/Time - Sheet1.csv"
+    sgd = SciPyGradientDescent(dewPointFilepath, timeFilepath)
+    allDataTuple = sgd.getDataPointsCSV()
+    dewPointData = [x for x in np.transpose(allDataTuple[0])[2]]
+    timeData = [x for x in np.transpose(allDataTuple[1])[0]]
+
+    initialGuesses = [-1, -1, -1]
+
+    coefficients, residuals = sgd.plotSingleData(
+        timeData,
+        dewPointData,
+        fitCurve,
+        includeErrorBars,
+        curveFunction,
+        initialGuesses,
+        deScalingFactor,
+        "Plotted Points",
+        delimiter
+    )
+
+    ax = plt.gca()
+
+    if fitCurve:
+        rSquared = sgd.calculateRSquared(residuals, dewPointData, curveFunction, coefficients)
+        plt.text(ax.get_xlim()[0], 0, f"R² = {rSquared}", fontsize=14, antialiased=True, verticalalignment='bottom', horizontalalignment='left')
+
+    plt.title("Dew Point vs Time")
+    plt.xlabel("Time (months)")
+    plt.ylabel("Dew Point (°F)")
+    plt.legend()
+    plt.show()
+    plt.close()
+
+
+def plotWindVsTime(
+        fitCurve: bool,
+        includeErrorBars: bool,
+        curveFunction: callable,
+        deScalingFactor: int,
+        delimiter: str
+) -> None:
+    windFilepath = "Spreadsheets/Memphis Climate and Electricity 2019-2024 - Sheet1.csv"
+    timeFilepath = "Spreadsheets/Time - Sheet1.csv"
+    sgd = SciPyGradientDescent(windFilepath, timeFilepath)
+    allDataTuple = sgd.getDataPointsCSV()
+    windData = [x for x in np.transpose(allDataTuple[0])[3]]
+    timeData = [x for x in np.transpose(allDataTuple[1])[0]]
+
+    initialGuesses = [-1, -1, -1]
+
+    coefficients, residuals = sgd.plotSingleData(
+        timeData,
+        windData,
+        fitCurve,
+        includeErrorBars,
+        curveFunction,
+        initialGuesses,
+        deScalingFactor,
+        "Plotted Points",
+        delimiter
+    )
+
+    ax = plt.gca()
+
+    if fitCurve:
+        rSquared = sgd.calculateRSquared(residuals, windData, curveFunction, coefficients)
+        plt.text(ax.get_xlim()[0], 0, f"R² = {rSquared}", fontsize=14, antialiased=True, verticalalignment='bottom', horizontalalignment='left')
+
+    plt.title("Wind Speed vs Time")
+    plt.xlabel("Time (months)")
+    plt.ylabel("Wind Speed (mph)")
+    plt.legend()
+    plt.show()
+    plt.close()
+
+
+def plotAvgElectricityDemandVsTime(
+        fitCurve: bool,
+        includeErrorBars: bool,
+        curveFunction: callable,
+        deScalingFactor: int,
+        delimiter: str
+) -> None:
+    electricityDemandFilepath = "Spreadsheets/Memphis Climate and Electricity 2019-2024 - Sheet1.csv"
+    timeFilepath = "Spreadsheets/Time - Sheet1.csv"
+    sgd = SciPyGradientDescent(electricityDemandFilepath, timeFilepath)
+    allDataTuple = sgd.getDataPointsCSV()
+    electricityDemandData = [x for x in np.transpose(allDataTuple[0])[3]]
+    timeData = [x for x in np.transpose(allDataTuple[1])[0]]
+
+    initialGuesses = [-1, -1, -1]
+
+    coefficients, residuals = sgd.plotSingleData(
+        timeData,
+        electricityDemandData,
+        fitCurve,
+        includeErrorBars,
+        curveFunction,
+        initialGuesses,
+        deScalingFactor,
+        "Plotted Points",
+        delimiter
+    )
+
+    ax = plt.gca()
+
+    if fitCurve:
+        rSquared = sgd.calculateRSquared(residuals, electricityDemandData, curveFunction, coefficients)
+        plt.text(ax.get_xlim()[0], 0, f"R² = {rSquared}", fontsize=14, antialiased=True, verticalalignment='bottom', horizontalalignment='left')
+
+    plt.title("Average Electricity Demand vs Time")
+    plt.xlabel("Time (months)")
+    plt.ylabel("Electricity Demand (MWh)")
+    plt.legend()
+    plt.show()
+    plt.close()
+
+
 def main():
     # plotEBikeSales(["United States"], True, True, sgd.exponential, 1, '--')
     # plotTemperatureVsElectricityConsumption(True, True, scipyGradientDescent.sinusoidal, 1, '')
-    plotTemperatureVsElectricityDemand(False, True, scipyGradientDescent.linear, 1, '')
-
+    # plotTemperatureVsElectricityDemand(False, True, scipyGradientDescent.linear, 1, '')
+    # plotTemperatureVsTime(True, True, scipyGradientDescent.linear, 1, '')
+    # plotDewPointVsTime(True, True, scipyGradientDescent.linear, 1, '')
+    # plotWindVsTime(True, True, scipyGradientDescent.linear, 1, '')
+    plotAvgElectricityDemandVsTime(True, True, scipyGradientDescent.linear, 1, '')
 
 if __name__ == '__main__':
     main()
