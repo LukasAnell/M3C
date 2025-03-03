@@ -221,6 +221,13 @@ def plotTemperatureVsTime(
     if fitCurve:
         rSquared = sgd.calculateRSquared(residuals  , temperatureData, curveFunction, coefficients)
         plt.text(ax.get_xlim()[0], 0, f"R² = {rSquared}", fontsize=14, antialiased=True, verticalalignment='bottom', horizontalalignment='left')
+        extrapolated = sgd.extrapolateData(20, coefficients, curveFunction, timeData)
+        plt.plot(extrapolated[0], extrapolated[1], label="Extrapolated Data")
+        # write extrapolated values to a file
+        with open("extrapolatedTemperatureVsTime.csv", "w") as file:
+            for i in range(len(extrapolated[0])):
+                file.write(f"{extrapolated[0][i]},{extrapolated[1][i]}\n")
+
 
     plt.title("Temperature vs Time")
     plt.xlabel("Time (months)")
@@ -263,6 +270,12 @@ def plotDewPointVsTime(
     if fitCurve:
         rSquared = sgd.calculateRSquared(residuals, dewPointData, curveFunction, coefficients)
         plt.text(ax.get_xlim()[0], 0, f"R² = {rSquared}", fontsize=14, antialiased=True, verticalalignment='bottom', horizontalalignment='left')
+        extrapolated = sgd.extrapolateData(20, coefficients, curveFunction, timeData)
+        plt.plot(extrapolated[0], extrapolated[1], label="Extrapolated Data")
+        # write extrapolated values to a file
+        with open("extrapolatedDewPointVsTime.csv", "w") as file:
+            for i in range(len(extrapolated[0])):
+                file.write(f"{extrapolated[0][i]},{extrapolated[1][i]}\n")
 
     plt.title("Dew Point vs Time")
     plt.xlabel("Time (months)")
@@ -305,6 +318,12 @@ def plotWindVsTime(
     if fitCurve:
         rSquared = sgd.calculateRSquared(residuals, windData, curveFunction, coefficients)
         plt.text(ax.get_xlim()[0], 0, f"R² = {rSquared}", fontsize=14, antialiased=True, verticalalignment='bottom', horizontalalignment='left')
+        extrapolated = sgd.extrapolateData(20, coefficients, curveFunction, timeData)
+        plt.plot(extrapolated[0], extrapolated[1], label="Extrapolated Data")
+        # write extrapolated values to a file
+        with open("extrapolatedWindVsTime.csv", "w") as file:
+            for i in range(len(extrapolated[0])):
+                file.write(f"{extrapolated[0][i]},{extrapolated[1][i]}\n")
 
     plt.title("Wind Speed vs Time")
     plt.xlabel("Time (months)")
@@ -347,6 +366,12 @@ def plotAvgElectricityDemandVsTime(
     if fitCurve:
         rSquared = sgd.calculateRSquared(residuals, electricityDemandData, curveFunction, coefficients)
         plt.text(ax.get_xlim()[0], 0, f"R² = {rSquared}", fontsize=14, antialiased=True, verticalalignment='bottom', horizontalalignment='left')
+        extrapolated = sgd.extrapolateData(20, coefficients, curveFunction, timeData)
+        plt.plot(extrapolated[0], extrapolated[1], label="Extrapolated Data")
+        # write extrapolated values to a file
+        with open("extrapolatedAvgElectricityDemandVsTime.csv", "w") as file:
+            for i in range(len(extrapolated[0])):
+                file.write(f"{extrapolated[0][i]},{extrapolated[1][i]}\n")
 
     plt.title("Average Electricity Demand vs Time")
     plt.xlabel("Time (months)")
@@ -363,7 +388,13 @@ def main():
     # plotTemperatureVsTime(True, True, scipyGradientDescent.linear, 1, '')
     # plotDewPointVsTime(True, True, scipyGradientDescent.linear, 1, '')
     # plotWindVsTime(True, True, scipyGradientDescent.linear, 1, '')
+    # plotAvgElectricityDemandVsTime(True, True, scipyGradientDescent.linear, 1, '')
+    # extrapolate temperature, dew point, wind speed, and electricity demand 20 years in the future
+    plotTemperatureVsTime(True, True, scipyGradientDescent.linear, 1, '')
+    plotDewPointVsTime(True, True, scipyGradientDescent.linear, 1, '')
+    plotWindVsTime(True, True, scipyGradientDescent.linear, 1, '')
     plotAvgElectricityDemandVsTime(True, True, scipyGradientDescent.linear, 1, '')
+
 
 if __name__ == '__main__':
     main()

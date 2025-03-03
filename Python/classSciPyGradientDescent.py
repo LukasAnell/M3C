@@ -1,6 +1,4 @@
-import inspect
 import statistics
-
 import numpy as np
 import pandas as pd
 import scipy.optimize
@@ -47,6 +45,13 @@ class SciPyGradientDescent:
     def getXYMean(self, xValues: [], yValues: []) -> tuple:
         xMean, yMean = statistics.mean(xValues), statistics.mean(yValues)
         return xMean, yMean
+
+
+    def extrapolateData(self, xExtension: float, coefficients: [float], function: callable, xValues: []) -> [float]:
+        # extrapolate data
+        xData = np.linspace(min(xValues), max(xValues) + xExtension, 1000)
+        yData = function(xData, *coefficients)
+        return xData, yData
 
 
     # calculateRSquared based on residuals

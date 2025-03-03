@@ -1,16 +1,14 @@
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
-from pyparsing import originalTextFor
 from sklearn import linear_model
 from sklearn.metrics import r2_score
-from sklearn.model_selection import train_test_split
 
 
 def sensitivityAnalysis(independentData, dependentData, trials=11, sampleSize=5):
     sampleIndices = np.random.choice(len(dependentData), sampleSize, replace=False)
     samplePoints = [dependentData[i] for i in sampleIndices]
 
+    percentDifferences = []
     deviations = []
     for _ in range(trials):
         # Vary each independent data point by ±5%
@@ -22,11 +20,15 @@ def sensitivityAnalysis(independentData, dependentData, trials=11, sampleSize=5)
 
         # Compare original points to varied points
         variedSamplePoints = [variedYPredict[i] for i in sampleIndices]
-        deviations.append(np.abs(np.mean(variedSamplePoints) - np.mean(samplePoints)) / np.mean(samplePoints) * 100)
 
-    averageDeviation = np.mean(deviations, axis=0)
-    print(f"Average deviation in sample points: {averageDeviation}%")
-    # print("Average deviation in random index: ", np.mean(deviations, axis=0))
+        deviations.append(np.max(np.abs(np.subtract(samplePoints, variedSamplePoints))))
+        percentDifferences.append(np.mean(np.abs(np.divide(np.subtract(samplePoints, variedSamplePoints), samplePoints))))
+
+    percentDifference = np.mean(percentDifferences)
+    deviations = np.max(deviations)
+    print(f"Percent difference in sample points: {100 * percentDifference}%")
+    print(f"Max deviation in sample points: {deviations}")
+    return percentDifference, deviations
 
 
 def findRSquaredOfElectricityDemand():
@@ -35,7 +37,7 @@ def findRSquaredOfElectricityDemand():
     # dependent: electricity demand
     # independent: temperature, humidity, dew point, wind speed, time (day)
     independentColsToGrab = [
-        'Temperature (°F)', 'Dew Point (°F)', 'Humidity (%)', 'Wind Speed (mph)'
+        'Temperature (°F)', 'Dew Point (°F)', 'Wind Speed (mph)'
     ]
     dependentColsToGrab = [
         'Demand (MWh)'
@@ -61,6 +63,10 @@ def findRSquaredOfElectricityDemand():
 
 def findRSquaredElectricityDemandOverLongTime():
     spreadsheet = pd.read_csv("Spreadsheets/Memphis Climate and Electricity 2019-2024 - Sheet1.csv")
+    electricityDemandVsTimeExtrapolation = pd.read_csv("extrapolatedAvgElectricityDemandVsTime.csv")
+    dewPointVsTimeExtrapolation = pd.read_csv("extrapolatedDewPointVsTime.csv")
+    temperatureVsTimeExtrapolation = pd.read_csv("extrapolatedTemperatureVsTime.csv")
+    windSpeedVsTimeExtrapolation = pd.read_csv("extrapolatedWindVsTime.csv")
     # dependent: electricity demand
     # independent: temperature, humidity, dew point, wind speed
     independentColsToGrab = [
@@ -70,9 +76,16 @@ def findRSquaredElectricityDemandOverLongTime():
         'Avg Electricity Demand (MWh)'
     ]
 
-    dependentData = [x for x in np.transpose(np.asarray(spreadsheet[dependentColsToGrab]))[0]]
-    independentData = [[1] + [y for y in x] for x in np.asarray(spreadsheet[independentColsToGrab])]
+    extraDependentData = [1] + [[y for y in x] for x in np.transpose(np.asarray(electricityDemandVsTimeExtrapolation))[1]]
 
+    extraIndependentData = [
+        [[y for y in x] for x in np.asarray(temperatureVsTimeExtrapolation[['Time', 'Avg Temperature max (°F)']])],
+        [[y for y in x] for x in np.asarray(dewPointVsTimeExtrapolation[['Time', 'Dew Point']])],
+        [[y for y in x] for x in np.asarray(windSpeedVsTimeExtrapolation[['Time', 'Wind (mph)']])]
+    ]
+
+    dependentData = [x for x in np.transpose(np.asarray(spreadsheet[dependentColsToGrab]))[0]] + extraDependentData
+    independentData = [[1] + [y for y in x] for x in np.asarray(spreadsheet[independentColsToGrab])] + extraIndependentData
     indices = np.argsort(dependentData)
     independentData = [independentData[i] for i in indices]
     dependentData.sort()
@@ -87,12 +100,19 @@ def findRSquaredElectricityDemandOverLongTime():
 
     return independentData, dependentData, yPredict
 
+
 def main():
-    #independentData, dependentData, yPredict = findRSquaredOfElectricityDemand()
-    # sensitivityAnalysis(independentData, dependentData, trials=5000, sampleSize=5)
+    independentData, dependentData, yPredict = findRSquaredOfElectricityDemand()
+    percentDifference, maxDeviation = sensitivityAnalysis(independentData, dependentData, trials=1000, sampleSize=5)
+    maxPredicted = max(yPredict)
+    print(maxPredicted * (1 + percentDifference), maxPredicted + maxDeviation)
+
+    print()
 
     independentData, dependentData, yPredict = findRSquaredElectricityDemandOverLongTime()
-    sensitivityAnalysis(independentData, dependentData, trials=1000, sampleSize=5)
+    percentDifference, maxDeviation = sensitivityAnalysis(independentData, dependentData, trials=1000, sampleSize=5)
+    maxPredicted = max(yPredict)
+    print(maxPredicted * (1 + percentDifference), maxPredicted + maxDeviation)
 
 
 if __name__ == "__main__":
